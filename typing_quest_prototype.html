@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typing Quest｜英打冒險</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --purple:#7467d8; --pink:#ff8fb1; --blue:#8eb8ff; --mint:#7fd6c1;
+  --ink:#4d5682; --soft:#f7f4ff; --card:rgba(255,255,255,.88);
+}
+body{
+  margin:0; font-family:Arial,"Microsoft JhengHei",sans-serif; color:var(--ink);
+  background:linear-gradient(135deg,#dff3ff,#f8e4f4,#fff1d6); min-height:100vh;
+}
+button{font:inherit; cursor:pointer; border:0}
+.app{max-width:1180px;margin:auto;padding:22px}
+nav{
+  display:flex;align-items:center;justify-content:space-between;gap:15px;
+  background:rgba(255,255,255,.75);backdrop-filter:blur(10px);
+  padding:12px 18px;border-radius:22px;box-shadow:0 8px 25px #6970a222;
+}
+.logo{font-size:24px;font-weight:900;color:#6258c9}
+.navlinks{display:flex;gap:7px;flex-wrap:wrap}
+.navlinks button,.ghost{background:white;color:#60688f;border-radius:12px;padding:9px 13px}
+.navlinks button.active{background:#7467d8;color:white}
+.hero,.card{
+  background:var(--card);border:3px solid white;border-radius:28px;
+  box-shadow:0 12px 35px #65709b22;
+}
+.hero{margin-top:18px;padding:28px;display:grid;grid-template-columns:1.2fr .8fr;gap:20px;align-items:center}
+h1{font-size:48px;margin:0 0 8px;color:#6559cf;text-shadow:2px 3px white}
+h2{margin-top:0;color:#6258c9}.subtitle{font-size:18px;color:#70799f}
+.cta,.primary{
+  background:linear-gradient(135deg,#7569df,#9b83eb);color:white;border-radius:15px;
+  padding:13px 24px;font-weight:800;box-shadow:0 7px 16px #7569df33
+}
+.animal{font-size:110px;text-align:center;filter:drop-shadow(0 8px 5px #7b6d8730)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}
+.stat{padding:15px;text-align:center}.stat b{display:block;font-size:25px;color:#6258c9}.stat span{font-size:13px;color:#7b84a8}
+.progress{height:12px;background:#e9e6f7;border-radius:99px;overflow:hidden}.progress>i{display:block;height:100%;background:linear-gradient(90deg,#ff91ae,#7569df);border-radius:99px}
+.page{display:none}.page.active{display:block}
+.levels{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.level{padding:17px;min-height:150px;text-align:center;position:relative}
+.level.locked{opacity:.55;filter:grayscale(.4)}.level .num{font-size:27px;font-weight:900;color:#7569df}.level small{display:block;margin:8px 0 14px}
+.play{background:#ff8eae;color:white;padding:9px 17px;border-radius:12px;font-weight:800}
+.lock{font-size:25px}
+.game-top{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:12px}
+.timer,.target,.scorebox{padding:13px 18px;border-radius:17px;background:white;text-align:center;font-weight:800}
+.target{font-size:24px;color:#7467d8}.timer{font-size:20px}
+.game-area{padding:22px;min-height:560px}
+.wordbox{text-align:center;margin:15px 0 20px}.prompt{font-size:16px}.answer{font-size:46px;font-weight:900;color:#7467d8;letter-spacing:4px}
+.feedback{height:28px;text-align:center;font-weight:800}
+.keyboard{max-width:850px;margin:30px auto 0}
+.keyrow{display:flex;justify-content:center;gap:6px;margin:6px 0}
+.key{
+ width:52px;height:48px;border-radius:10px;background:#edf1ff;border:2px solid #cbd5ff;
+ display:flex;align-items:center;justify-content:center;font-weight:900;color:#596aa8;
+ transition:.08s;box-shadow:0 3px 0 #c6cae5;
+}
+.key.target{background:#ffd66e;border-color:#f2bb3d;color:#765800;transform:translateY(-3px)}
+.key.pressed{background:#ff8fb1;color:white;border-color:#ff6f9a;transform:translateY(2px);box-shadow:none}
+.key.correct{background:#7fd6c1;color:white;border-color:#52bca5}
+.result{padding:28px;text-align:center}.bigscore{font-size:52px;color:#7467d8;font-weight:900}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.badge,.pet{padding:20px;text-align:center}.badge .icon,.pet .icon{font-size:55px}.muted{opacity:.5}
+.pet{min-height:170px}.pet.unlocked{border:3px solid #ffca63}
+.notice{padding:13px 16px;border-radius:16px;background:#fff5d9;margin:12px 0}
+table{width:100%;border-collapse:collapse}td,th{padding:10px;text-align:center;border-bottom:1px solid #e8e5f1}
+footer{text-align:center;padding:25px;color:#7b84a8}
+@media(max-width:800px){
+ .hero{grid-template-columns:1fr}.levels{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:repeat(2,1fr)}
+ .grid{grid-template-columns:repeat(2,1fr)}.game-top{grid-template-columns:1fr}
+ .key{width:32px;height:40px;font-size:13px}.app{padding:10px}h1{font-size:36px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<nav>
+  <div class="logo">⌨️ Typing Quest</div>
+  <div class="navlinks">
+    <button data-page="home" class="active">首頁</button>
+    <button data-page="levels">關卡</button>
+    <button data-page="achievements">成就</button>
+    <button data-page="pets">動物圖鑑</button>
+    <button data-page="stats">統計</button>
+  </div>
+</nav>
+
+<section id="home" class="page active">
+  <div class="hero">
+    <div>
+      <h1>Typing Quest</h1>
+      <div class="subtitle">Learn English. Improve Typing. Complete Your Quest!</div>
+      <p>用遊戲練習英文打字位置與基礎單字，在限時挑戰中提升速度與正確率。</p>
+      <div class="notice">🎁 每天完成 3 次練習，可獲得每日 EXP 獎勵！升級後解鎖可愛小動物。</div>
+      <button class="cta" onclick="showPage('levels')">開始冒險 →</button>
+    </div>
+    <div class="animal" id="homePet">🐰</div>
+  </div>
+  <div class="stats">
+    <div class="card stat"><span>目前等級</span><b id="homeLevel">Lv.1</b></div>
+    <div class="card stat"><span>經驗值</span><b id="homeXP">0 / 100</b></div>
+    <div class="card stat"><span>今日次數</span><b id="homeDaily">0 / 3</b></div>
+    <div class="card stat"><span>已解鎖動物</span><b id="homePets">1</b></div>
+  </div>
+  <div class="card" style="padding:20px">
+    <h2>升級進度</h2><div class="progress"><i id="homeBar" style="width:0%"></i></div>
+  </div>
+</section>
+
+<section id="levels" class="page">
+  <div class="card" style="padding:24px">
+    <h2>🎮 選擇關卡</h2>
+    <p>Lv.1～Lv.5 練習英文字母位置；Lv.6 開始進入基礎英文單字。</p>
+    <div class="levels" id="levelList"></div>
+  </div>
+</section>
+
+<section id="game" class="page">
+  <div class="card game-area">
+    <div class="game-top">
+      <div class="timer">⏱ <span id="time">60</span>s</div>
+      <div class="target">請輸入：<span id="targetText">A</span></div>
+      <div class="scorebox">⭐ <span id="gameScore">0</span>　❌ <span id="gameMiss">0</span></div>
+    </div>
+    <div class="wordbox">
+      <div class="prompt" id="modeText">字母位置練習</div>
+      <div class="answer" id="answerText">A</div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+    <div class="keyboard" id="keyboard"></div>
+    <p style="text-align:center;color:#7a83a5">黃色＝正確答案　｜　粉色＝你剛剛按下的按鍵</p>
+    <div style="text-align:center;margin-top:20px">
+      <button class="ghost" onclick="stopGame()">離開關卡</button>
+    </div>
+  </div>
+</section>
+
+<section id="result" class="page">
+  <div class="card result">
+    <div style="font-size:70px">🎉</div>
+    <h2 id="resultTitle">挑戰完成！</h2>
+    <div class="bigscore" id="resultScore">0</div>
+    <p>成功輸入</p>
+    <div class="stats">
+      <div class="stat card"><span>正確</span><b id="resultCorrect">0</b></div>
+      <div class="stat card"><span>錯誤/漏掉</span><b id="resultMiss">0</b></div>
+      <div class="stat card"><span>正確率</span><b id="resultAccuracy">0%</b></div>
+      <div class="stat card"><span>WPM</span><b id="resultWPM">0</b></div>
+    </div>
+    <p id="resultXP"></p>
+    <button class="primary" onclick="showPage('levels')">返回關卡</button>
+  </div>
+</section>
+
+<section id="achievements" class="page">
+ <div class="card" style="padding:24px"><h2>🏆 成就</h2><div class="grid" id="achievementList"></div></div>
+</section>
+
+<section id="pets" class="page">
+ <div class="card" style="padding:24px">
+  <h2>🐾 動物圖鑑</h2><p>每升一級解鎖一隻小動物！</p>
+  <div class="grid" id="petList"></div>
+ </div>
+</section>
+
+<section id="stats" class="page">
+ <div class="card" style="padding:24px">
+  <h2>📈 學習統計</h2>
+  <div class="stats">
+   <div class="stat card"><span>總練習次數</span><b id="totalSessions">0</b></div>
+   <div class="stat card"><span>最高正確率</span><b id="bestAccuracy">0%</b></div>
+   <div class="stat card"><span>最高 WPM</span><b id="bestWPM">0</b></div>
+   <div class="stat card"><span>累積成功字數</span><b id="totalCorrect">0</b></div>
+  </div>
+  <h3>最近紀錄</h3><table><thead><tr><th>關卡</th><th>正確</th><th>正確率</th><th>WPM</th></tr></thead><tbody id="history"></tbody></table>
+ </div>
+</section>
+<footer>Typing Quest Prototype｜數位媒材概論提案雛型</footer>
+</div>
+
+<script>
+const animals=["🐰","🐱","🦊","🐶","🐼","🐨","🐹","🦄","🐯","🐸","🐧","🐻"];
+const petNames=["小兔子","小貓咪","小狐狸","小狗狗","小熊貓","小無尾熊","小倉鼠","小獨角獸","小老虎","小青蛙","小企鵝","小熊"];
+const achievements=[
+ ["🌱","初次挑戰","完成第一次練習",s=>s.sessions>=1],
+ ["⌨️","指尖新手","成功輸入 20 個字",s=>s.totalCorrect>=20],
+ ["⏱️","時間管理","完成一次限時挑戰",s=>s.sessions>=1],
+ ["🎯","準確王","單次正確率達 100%",s=>s.bestAccuracy>=100],
+ ["⚡","速度之星","達到 30 WPM",s=>s.bestWPM>=30],
+ ["🔥","每日玩家","一天完成 3 次練習",s=>s.maxDaily>=3],
+ ["📚","單字收藏家","累積成功 100 個字",s=>s.totalCorrect>=100],
+ ["💎","句子達人","完成 Lv.10",s=>s.maxLevelPlayed>=10]
+];
+let state=JSON.parse(localStorage.getItem("typingQuestState")||"null")||{
+ level:1,xp:0,sessions:0,totalCorrect:0,bestAccuracy:0,bestWPM:0,maxDaily:0,maxLevelPlayed:0,
+ dailyDate:"",daily:0,history:[]
+};
+function save(){localStorage.setItem("typingQuestState",JSON.stringify(state));}
+function xpNeed(){return state.level*100}
+function addXP(n){
+ state.xp+=n;
+ while(state.xp>=xpNeed()){state.xp-=xpNeed();state.level=Math.min(12,state.level+1);}
+ save();renderAll();
+}
+function today(){return new Date().toISOString().slice(0,10)}
+function resetDailyIfNeeded(){
+ if(state.dailyDate!==today()){state.dailyDate=today();state.daily=0;save();}
+}
+function showPage(id){
+ document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+ document.querySelectorAll(".navlinks button").forEach(b=>b.classList.toggle("active",b.dataset.page===id));
+ renderAll();
+}
+document.querySelectorAll(".navlinks button").forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+
+const levelNames=["字母位置","鍵盤上排","鍵盤下排","全鍵盤","綜合強化","基礎單字","食物單字","動物單字","生活單字","綜合挑戰","進階單字","終極挑戰"];
+const words=[
+ ["cat","dog","sun","red","book","pen","apple","fish"],
+ ["apple","banana","cat","dog","school","friend","music","water"],
+ ["happy","family","orange","yellow","house","computer","flower","green"],
+ ["hello","morning","teacher","student","coffee","garden","summer","friend"],
+ ["computer","english","keyboard","practice","challenge","beautiful","together","learning"],
+ ["adventure","important","favorite","language","question","answer","simple","future"]
+];
+function renderLevels(){
+ let box=document.getElementById("levelList");box.innerHTML="";
+ for(let i=1;i<=12;i++){
+  let unlocked=i<=state.level;
+  let el=document.createElement("div");el.className="card level"+(unlocked?"":" locked");
+  let mode=i<=5?"字母位置練習":"基礎英文單字";
+  el.innerHTML=`<div class="num">Lv.${i}</div><b>${levelNames[i-1]}</b><small>${mode}</small>${unlocked?`<button class="play" onclick="startGame(${i})">開始</button>`:`<div class="lock">🔒</div>`}`;
+  box.appendChild(el);
+ }
+}
+function renderPets(){
+ let box=document.getElementById("petList");box.innerHTML="";
+ for(let i=1;i<=12;i++){
+  let unlocked=i<=state.level;
+  box.innerHTML+=`<div class="card pet ${unlocked?"unlocked":"muted"}"><div class="icon">${unlocked?animals[i-1]:"🔒"}</div><b>Lv.${i} ${unlocked?petNames[i-1]:"未解鎖"}</b><p>${unlocked?"已加入你的圖鑑":"升到 Lv."+i+" 解鎖"}</p></div>`;
+ }
+}
+function renderAchievements(){
+ let box=document.getElementById("achievementList");box.innerHTML="";
+ achievements.forEach(a=>{let ok=a[3](state);box.innerHTML+=`<div class="card badge ${ok?"":"muted"}"><div class="icon">${ok?a[0]:"🔒"}</div><b>${a[1]}</b><p>${a[2]}</p><small>${ok?"已解鎖":"未解鎖"}</small></div>`});
+}
+function renderStats(){
+ document.getElementById("totalSessions").textContent=state.sessions;
+ document.getElementById("bestAccuracy").textContent=state.bestAccuracy+"%";
+ document.getElementById("bestWPM").textContent=state.bestWPM;
+ document.getElementById("totalCorrect").textContent=state.totalCorrect;
+ document.getElementById("history").innerHTML=state.history.slice(-8).reverse().map(x=>`<tr><td>Lv.${x.level}</td><td>${x.correct}</td><td>${x.acc}%</td><td>${x.wpm}</td></tr>`).join("")||"<tr><td colspan='4'>還沒有紀錄</td></tr>";
+}
+function renderHome(){
+ resetDailyIfNeeded();
+ document.getElementById("homeLevel").textContent="Lv."+state.level;
+ document.getElementById("homeXP").textContent=state.xp+" / "+xpNeed();
+ document.getElementById("homeDaily").textContent=state.daily+" / 3";
+ document.getElementById("homePets").textContent=state.level;
+ document.getElementById("homeBar").style.width=Math.min(100,state.xp/xpNeed()*100)+"%";
+ document.getElementById("homePet").textContent=animals[Math.max(0,state.level-1)];
+}
+function renderAll(){renderHome();renderLevels();renderPets();renderAchievements();renderStats();}
+let game=null;
+const rows=["QWERTYUIOP","ASDFGHJKL","ZXCVBNM"];
+function buildKeyboard(target,pressed){
+ let box=document.getElementById("keyboard");box.innerHTML="";
+ rows.forEach(row=>{
+  let r=document.createElement("div");r.className="keyrow";
+  [...row].forEach(k=>{
+   let d=document.createElement("div");d.className="key";d.textContent=k;
+   if(k===target)d.classList.add("target");
+   if(k===pressed)d.classList.add("pressed");
+   r.appendChild(d);
+  });box.appendChild(r);
+ });
+}
+function nextTarget(){
+ if(!game)return;
+ if(game.level<=5){
+  const pools=["ASDFJKL","QWERTYUIOP","ZXCVBNM","ABCDEFGHIJKLMNOPQRSTUVWXYZ","ABCDEFGHIJKLMNOPQRSTUVWXYZ"];
+  game.target=pools[game.level-1][Math.floor(Math.random()*pools[game.level-1].length)];
+ }else{
+  const pool=words[Math.min(words.length-1,game.level-6)];
+  game.target=pool[Math.floor(Math.random()*pool.length)];
+ }
+ document.getElementById("targetText").textContent=game.target;
+ document.getElementById("answerText").textContent=game.target;
+ buildKeyboard(game.target,"");
+}
+function startGame(level){
+ resetDailyIfNeeded();
+ if(level>state.level)return;
+ showPage("game");
+ game={level,seconds:60,correct:0,miss:0,attempts:0,target:"",start:Date.now(),pressed:""};
+ document.getElementById("gameScore").textContent=0;document.getElementById("gameMiss").textContent=0;
+ document.getElementById("modeText").textContent=level<=5?"字母位置練習":"基礎英文單字";
+ document.getElementById("feedback").textContent="";
+ nextTarget();
+ clearInterval(game.timer);
+ game.timer=setInterval(()=>{game.seconds--;document.getElementById("time").textContent=game.seconds;if(game.seconds<=0)finishGame()},1000);
+}
+document.addEventListener("keydown",e=>{
+ if(!game || e.repeat)return;
+ let k=e.key.toUpperCase();
+ if(!/^[A-Z]$/.test(k))return;
+ game.pressed=k;buildKeyboard(game.target,k);
+ if(game.level<=5){
+  game.attempts++;
+  if(k===game.target){game.correct++;document.getElementById("feedback").textContent="✅ 正確！ +1";document.getElementById("feedback").style.color="#43a88f";nextTarget();}
+  else{game.miss++;document.getElementById("feedback").textContent="❌ 再試一次！";document.getElementById("feedback").style.color="#e26d8d";}
+ }else{
+  let target=game.target.toUpperCase();
+  if(!game.typed)game.typed="";
+  game.attempts++;
+  if(k===target[game.typed.length]){
+    game.typed+=k;
+    document.getElementById("answerText").textContent=target.slice(0,game.typed.length)+"_".repeat(target.length-game.typed.length);
+    if(game.typed.length===target.length){game.correct+=target.length;document.getElementById("feedback").textContent="🌟 單字完成！";game.typed="";nextTarget();}
+  }else{game.miss++;document.getElementById("feedback").textContent="❌ 按鍵位置不對";game.typed="";}
+ }
+ document.getElementById("gameScore").textContent=game.correct;document.getElementById("gameMiss").textContent=game.miss;
+});
+function stopGame(){if(game){clearInterval(game.timer);game=null}showPage("levels")}
+function finishGame(){
+ if(!game)return;
+ clearInterval(game.timer);
+ let duration=Math.max(1,(Date.now()-game.start)/60000);
+ let acc=game.attempts?Math.round((game.correct/Math.max(1,game.correct+game.miss))*100):0;
+ let wpm=Math.round((game.correct/5)/duration);
+ let xp=20;
+ resetDailyIfNeeded();
+ if(state.daily<3){state.daily++;xp+=10;}
+ state.sessions++;state.totalCorrect+=game.correct;state.bestAccuracy=Math.max(state.bestAccuracy,acc);state.bestWPM=Math.max(state.bestWPM,wpm);state.maxDaily=Math.max(state.maxDaily,state.daily);state.maxLevelPlayed=Math.max(state.maxLevelPlayed,game.level);
+ state.history.push({level:game.level,correct:game.correct,acc,wpm});
+ addXP(xp); // saves + renders
+ document.getElementById("resultScore").textContent=game.correct;
+ document.getElementById("resultCorrect").textContent=game.correct;
+ document.getElementById("resultMiss").textContent=game.miss;
+ document.getElementById("resultAccuracy").textContent=acc+"%";
+ document.getElementById("resultWPM").textContent=wpm;
+ document.getElementById("resultXP").textContent=`本次獲得 ${xp} EXP！${state.daily>=3?" 今日 3 次獎勵已完成 🎁":""}`;
+ game=null;showPage("result");
+}
+renderAll();
+</script>
+</body>
+</html>
